@@ -238,69 +238,70 @@ def trace(ray,objects,lights,depth):
 
 	if not collidee:
 		return bg_color #no collisions, return backgrond
-	
-	collision_normal = collision_point - obj.position
-	collision_normal.normalize()
-	bias = 1e-4
-	inside = False
-	if ray.d.dot(collision_normal) > 0:
-		collision_normal = collision_normal * (-1.0)
-		inside = False
-
-#	if (collidee.transparency > 0 or collidee.reflectivity > 0) and depth < MAX_RAY_DEPTH:
-##	if False:
-#		facingratio = ray.d.dot(collision_normal) * (-1.0)
-#		# change the mix value to tweak the effect
-#		fresneleffect = mix(math.pow(1 - facingratio, 3), 1, 0.1)
-#		# compute reflection direction (not need to normalize because all vectors
-#		# are already normalized)
-#		refldir = ray.d - collision_normal * 2 * ray.d.dot(collision_normal)
-#		refldir.normalize()
-#		reflray = Ray(collision_point + collision_normal * bias,refldir)
-#		reflection = trace(reflray, objects,lights, depth + 1)
-#		
-#		refraction = Point(0,0,0)
-#		# if the sphere is also transparent compute refraction ray (transmission)
-#		if collidee.transparency:
-#			ior = 1.1
-#			eta = ior if inside else 1 # are we inside or outside the surface?
-#			cosi = 0 - collision_normal.dot(ray.d)
-#			k = 1 - eta * eta * (1 - cosi * cosi)
-#			refrdir = ray.d * eta + collision_normal * (eta * cosi - math.sqrt(k))
-#			refrdir.normalize()
-#			refrray = Ray(collision_point + collision_normal * bias,refrdir)
-#			refraction = trace(refrray, objects, lights, depth + 1)
-
-#		#the result is a mix of reflection and refraction (if the sphere is transparent)
-#		flec = reflection * fresneleffect
-#		#frac = refraction * (1 - fresneleffect) * collidee.transparency
-#		frac = refraction * (1 - fresneleffect)
-#		both = flec + frac
-#		return both
-#		surfaceColor = both.vector_mul(collidee.color)
-#		return surfaceColor
-
-#	else:
-	light = lights[0]
-	collision_normal = collision_point - obj.position
-	lightDirection = light.position - collision_point
-	lightDirection.normalize()
-	rayPosition = collision_point + collision_normal * bias
-#		rayPosition = collision_point + collision_normal
-	isShadow = False
-	for obj in objects:
-		if obj == collidee:
-			continue
-		result = obj.RayCollides(Ray(rayPosition,lightDirection))
-		if result != 0:
-			isShadow = True
-			break
-			
-	if isShadow:
-		return Color(0,0,0)
-#			return collidee.color * 0.1
 	else:
-		return collidee.color
+		return Color(1,1,1)
+#	collision_normal = collision_point - obj.position
+#	collision_normal.normalize()
+#	bias = 1e-4
+#	inside = False
+#	if ray.d.dot(collision_normal) > 0:
+#		collision_normal = collision_normal * (-1.0)
+#		inside = False
+
+##	if (collidee.transparency > 0 or collidee.reflectivity > 0) and depth < MAX_RAY_DEPTH:
+###	if False:
+##		facingratio = ray.d.dot(collision_normal) * (-1.0)
+##		# change the mix value to tweak the effect
+##		fresneleffect = mix(math.pow(1 - facingratio, 3), 1, 0.1)
+##		# compute reflection direction (not need to normalize because all vectors
+##		# are already normalized)
+##		refldir = ray.d - collision_normal * 2 * ray.d.dot(collision_normal)
+##		refldir.normalize()
+##		reflray = Ray(collision_point + collision_normal * bias,refldir)
+##		reflection = trace(reflray, objects,lights, depth + 1)
+##		
+##		refraction = Point(0,0,0)
+##		# if the sphere is also transparent compute refraction ray (transmission)
+##		if collidee.transparency:
+##			ior = 1.1
+##			eta = ior if inside else 1 # are we inside or outside the surface?
+##			cosi = 0 - collision_normal.dot(ray.d)
+##			k = 1 - eta * eta * (1 - cosi * cosi)
+##			refrdir = ray.d * eta + collision_normal * (eta * cosi - math.sqrt(k))
+##			refrdir.normalize()
+##			refrray = Ray(collision_point + collision_normal * bias,refrdir)
+##			refraction = trace(refrray, objects, lights, depth + 1)
+
+##		#the result is a mix of reflection and refraction (if the sphere is transparent)
+##		flec = reflection * fresneleffect
+##		#frac = refraction * (1 - fresneleffect) * collidee.transparency
+##		frac = refraction * (1 - fresneleffect)
+##		both = flec + frac
+##		return both
+##		surfaceColor = both.vector_mul(collidee.color)
+##		return surfaceColor
+
+##	else:
+#	light = lights[0]
+#	collision_normal = collision_point - obj.position
+#	lightDirection = light.position - collision_point
+#	lightDirection.normalize()
+#	rayPosition = collision_point + collision_normal * bias
+##		rayPosition = collision_point + collision_normal
+#	isShadow = False
+#	for obj in objects:
+#		if obj == collidee:
+#			continue
+#		result = obj.RayCollides(Ray(rayPosition,lightDirection))
+#		if result != 0:
+#			isShadow = True
+#			break
+#			
+#	if isShadow:
+#		return Color(0,0,0)
+##			return collidee.color * 0.1
+#	else:
+#		return collidee.color
 
 def mix(a,b,mix):
 	return b * mix + a * (1 - mix)
@@ -324,7 +325,7 @@ galaxy = csv.reader(open('frames/frame00000.csv'))
 for star in galaxy:
     x = float(star[2])/10
     y = float(star[3])/10
-    z = float(star[4])/10-100
+    z = float(star[4])/10-50
     size = float(star[1])/1000
     spheres.append(Sphere(Point(x,y,z),size,Color(0.2,0.2,0.2),0,0))
 
