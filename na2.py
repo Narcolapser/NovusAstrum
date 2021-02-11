@@ -13,9 +13,9 @@ def galmove(seg):
 
 frames = os.listdir('frames')
 frames.sort()
-procs = 24
+procs = 4
 if len(frames) == 0:
-	galaxy = [random_star(i+1) for i in range(420*procs)]
+	galaxy = [random_star(i+1) for i in range(10*procs)]
 	i = -1
 else:
 	rows = open('frames/' + frames[-1]).readlines()
