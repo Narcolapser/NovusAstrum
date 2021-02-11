@@ -187,6 +187,7 @@ class Color(Vector):
 		self.w = a
 	
 	def __mul__(self,val):
+		val = abs(val)
 		x = self.x * val
 		y = self.y * val
 		z = self.z * val
@@ -247,7 +248,17 @@ def trace(ray,objects,lights,depth):
 	if not collidee:
 		return bg_color #no collisions, return backgrond
 	else:
-		return collidee.color
+		collision_normal = collision_point - obj.position
+		collision_normal.normalize()
+		x = collision_normal.x / ray.x
+		y = collision_normal.y / ray.y
+		z = collision_normal.z / ray.z
+		x = 1/x if x > 1 else x
+		y = 1/x if z > 1 else y
+		z = 1/x if y > 1 else z
+
+		scaled_color = collidee.color * x * y * z
+		return = scaled_color
 
 def mix(a,b,mix):
 	return b * mix + a * (1 - mix)
