@@ -7,8 +7,10 @@ import sys
 from PIL import Image, ImageDraw
 import csv
 
-xRes = 640
-yRes = 480
+#xRes = 640
+#yRes = 480
+xRes = 320
+yRes = 240
 MAX_RAY_DEPTH = 3
 
 gcams = []
@@ -28,8 +30,6 @@ class Outs:
 
 	def drawPixelRGB(self,x,y,r,g,b):
 		color = "#{0:02x}{1:02x}{2:02x}".format(int(r*255),int(g*255),int(b*255))
-#		color = '#ffffff'
-#		if color != '#000000': print color
 		self.draw.point((x,y),color)
 
 	def drawPixelColor(self,x,y,color):
@@ -186,6 +186,14 @@ class Color(Vector):
 		self.z = b
 		self.w = a
 	
+	def __mul__(self,val):
+		x = self.x * val
+		y = self.y * val
+		z = self.z * val
+		return Color(x,y,z,self.a)
+		
+	
+	
 	def __repr__(self):
 		return "{},{},{}".format(self.x,self.y,self.z)
 
@@ -239,69 +247,7 @@ def trace(ray,objects,lights,depth):
 	if not collidee:
 		return bg_color #no collisions, return backgrond
 	else:
-		return Color(1,1,1)
-#	collision_normal = collision_point - obj.position
-#	collision_normal.normalize()
-#	bias = 1e-4
-#	inside = False
-#	if ray.d.dot(collision_normal) > 0:
-#		collision_normal = collision_normal * (-1.0)
-#		inside = False
-
-##	if (collidee.transparency > 0 or collidee.reflectivity > 0) and depth < MAX_RAY_DEPTH:
-###	if False:
-##		facingratio = ray.d.dot(collision_normal) * (-1.0)
-##		# change the mix value to tweak the effect
-##		fresneleffect = mix(math.pow(1 - facingratio, 3), 1, 0.1)
-##		# compute reflection direction (not need to normalize because all vectors
-##		# are already normalized)
-##		refldir = ray.d - collision_normal * 2 * ray.d.dot(collision_normal)
-##		refldir.normalize()
-##		reflray = Ray(collision_point + collision_normal * bias,refldir)
-##		reflection = trace(reflray, objects,lights, depth + 1)
-##		
-##		refraction = Point(0,0,0)
-##		# if the sphere is also transparent compute refraction ray (transmission)
-##		if collidee.transparency:
-##			ior = 1.1
-##			eta = ior if inside else 1 # are we inside or outside the surface?
-##			cosi = 0 - collision_normal.dot(ray.d)
-##			k = 1 - eta * eta * (1 - cosi * cosi)
-##			refrdir = ray.d * eta + collision_normal * (eta * cosi - math.sqrt(k))
-##			refrdir.normalize()
-##			refrray = Ray(collision_point + collision_normal * bias,refrdir)
-##			refraction = trace(refrray, objects, lights, depth + 1)
-
-##		#the result is a mix of reflection and refraction (if the sphere is transparent)
-##		flec = reflection * fresneleffect
-##		#frac = refraction * (1 - fresneleffect) * collidee.transparency
-##		frac = refraction * (1 - fresneleffect)
-##		both = flec + frac
-##		return both
-##		surfaceColor = both.vector_mul(collidee.color)
-##		return surfaceColor
-
-##	else:
-#	light = lights[0]
-#	collision_normal = collision_point - obj.position
-#	lightDirection = light.position - collision_point
-#	lightDirection.normalize()
-#	rayPosition = collision_point + collision_normal * bias
-##		rayPosition = collision_point + collision_normal
-#	isShadow = False
-#	for obj in objects:
-#		if obj == collidee:
-#			continue
-#		result = obj.RayCollides(Ray(rayPosition,lightDirection))
-#		if result != 0:
-#			isShadow = True
-#			break
-#			
-#	if isShadow:
-#		return Color(0,0,0)
-##			return collidee.color * 0.1
-#	else:
-#		return collidee.color
+		return collidee.color
 
 def mix(a,b,mix):
 	return b * mix + a * (1 - mix)
@@ -309,8 +255,19 @@ def mix(a,b,mix):
 def get_distance(p1,p2):
 	distance = math.sqrt((p1.x-p2.x)**2+(p1.y-p2.x)**2+(p1.z-p2.z)**2)
 
+def get_star_color(size):
+	# We are only going to work with values from 0 -> 1. Scale is a constant that should be set to the largest possible size.
+	scaled = size/scale if size < scale else 1
+	# Big and bright blue
+	big = Color(0.75,0.9,1)
+	
+	# Small and smuldery
+	small = Color(0.5,0,0)
+	return big
+
 #bg_color = Color(1,1,1)
 bg_color = Color(0,0,0)
+scale = 1000
 
 spheres = []
 #position, radius, surface color, reflectivity, transparency,
@@ -321,13 +278,14 @@ spheres = []
 #spheres.append(Sphere(Point(-5.5,0,-15), 0.3, Color(0.9,0.9,0.9),1,0))
 #spheres.append(Sphere(Point(0,0,-15), 0.3, Color(0.9,0.0,0.9),1,0))
 
+
 galaxy = csv.reader(open('frames/frame00000.csv'))
 for star in galaxy:
     x = float(star[2])/10
     y = float(star[3])/10
     z = float(star[4])/10-50
     size = float(star[1])/1000
-    spheres.append(Sphere(Point(x,y,z),size,Color(0.2,0.2,0.2),0,0))
+    spheres.append(Sphere(Point(x,y,z),size,get_star_color(size),0,0))
 
 
 light = Light(Point( 0.0, 20, -30), Color(0.00, 0.00, 0.00));
