@@ -162,8 +162,8 @@ class Sphere:
 		q = ray.o + ray.d * t
 		return (t,q)
 
-	def __contains__(self,val):
-		return self.RayCollides(val)
+#	def __contains__(self,val):
+#		return self.RayCollides(val)
 
 class LineSegment:
 	def __init__(self,A,B):
@@ -191,9 +191,7 @@ class Color(Vector):
 		x = self.x * val
 		y = self.y * val
 		z = self.z * val
-		return Color(x,y,z,self.a)
-		
-	
+		return Color(x,y,z,self.w)
 	
 	def __repr__(self):
 		return "{},{},{}".format(self.x,self.y,self.z)
@@ -250,15 +248,22 @@ def trace(ray,objects,lights,depth):
 	else:
 		collision_normal = collision_point - obj.position
 		collision_normal.normalize()
-		x = collision_normal.x / ray.x
-		y = collision_normal.y / ray.y
-		z = collision_normal.z / ray.z
-		x = 1/x if x > 1 else x
-		y = 1/x if z > 1 else y
-		z = 1/x if y > 1 else z
-
-		scaled_color = collidee.color * x * y * z
-		return = scaled_color
+		
+		# Vector from Ray origin to Sphere Center
+		ray_to_sphere = obj.position - ray.o
+		
+		# Distance from ray origin to sphere center
+		distance = math.sqrt(ray_to_sphere.dot(ray_to_sphere))
+		
+		# Distance until the ray is at a right angle to the center of the sphere
+		ray_projection = ray_to_sphere.dot(ray.d)
+		
+		# How close to the center of the sphere would the ray have passed
+		distance_from_center = math.sqrt(distance**2 - ray_projection**2)
+		
+		# The percentage from the surface of the sphere to the center of it
+		distance_percent = distance_from_center / obj.radius
+		return collidee.color * distance_percent
 
 def mix(a,b,mix):
 	return b * mix + a * (1 - mix)
