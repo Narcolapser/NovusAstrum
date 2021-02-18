@@ -195,6 +195,18 @@ class Color(Vector):
 	
 	def __repr__(self):
 		return "{},{},{}".format(self.x,self.y,self.z)
+	
+	def copy(self):
+		return Color(self.x,self.y,self.z,self.w)
+	
+	def __add__(self,other_color):
+		# This attempts to add two colors together, getting a brighter resulting color value that
+		# is still less than 1.
+		x = math.sqrt(self.x**2 + other_color.x**2)
+		y = math.sqrt(self.y**2 + other_color.y**2)
+		z = math.sqrt(self.z**2 + other_color.z**2)
+		w = math.sqrt(self.w**2 + other_color.w**2)
+		return Color(x,y,z,w)
 
 class Light:
 	def __init__(self,position,color):
@@ -232,38 +244,41 @@ def print_status(x,y,width,height):
 
 def trace(ray,objects,lights,depth):
 	min_distance = float("inf")
-	collidee = None
-	collision_point = None
+	collisions = []
 	for obj in objects:
 		result = obj.RayCollides(ray)
 		if result != 0:
-			distance = result[0]
-			if distance < min_distance:
-				collidee = obj
-				collision_point = result[1]
-				min_distance = distance
+			collisions.append((obj, result[1], result[0]))
+#			distance = result[0]
+#			if distance < min_distance:
+#				collidee = obj
+#				collision_point = result[1]
+#				min_distance = distance
 
-	if not collidee:
-		return bg_color #no collisions, return backgrond
+	if len(collisions):
+		color = bg_color.copy()
+		for collidee, collision_point, collision_distance in collisions:
+			collision_normal = collision_point - collidee.position
+			collision_normal.normalize()
+			
+			# Vector from Ray origin to Sphere Center
+			ray_to_sphere = collidee.position - ray.o
+			
+			# Distance from ray origin to sphere center
+			distance = math.sqrt(ray_to_sphere.dot(ray_to_sphere))
+			
+			# Distance until the ray is at a right angle to the center of the sphere
+			ray_projection = ray_to_sphere.dot(ray.d)
+			
+			# How close to the center of the sphere would the ray have passed
+			distance_from_center = math.sqrt(distance**2 - ray_projection**2)
+			
+			# The percentage from the surface of the sphere to the center of it
+			distance_percent = 1 - distance_from_center / collidee.radius
+			color = color + collidee.color * distance_percent
+		return color
 	else:
-		collision_normal = collision_point - collidee.position
-		collision_normal.normalize()
-		
-		# Vector from Ray origin to Sphere Center
-		ray_to_sphere = collidee.position - ray.o
-		
-		# Distance from ray origin to sphere center
-		distance = math.sqrt(ray_to_sphere.dot(ray_to_sphere))
-		
-		# Distance until the ray is at a right angle to the center of the sphere
-		ray_projection = ray_to_sphere.dot(ray.d)
-		
-		# How close to the center of the sphere would the ray have passed
-		distance_from_center = math.sqrt(distance**2 - ray_projection**2)
-		
-		# The percentage from the surface of the sphere to the center of it
-		distance_percent = 1 - distance_from_center / collidee.radius
-		return collidee.color * distance_percent
+		return bg_color #no collisions, return backgrond
 
 def mix(a,b,mix):
 	return b * mix + a * (1 - mix)
