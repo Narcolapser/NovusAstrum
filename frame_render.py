@@ -6,6 +6,7 @@ import time
 import sys
 from PIL import Image, ImageDraw
 import csv
+import os
 
 xRes = 640
 yRes = 480
@@ -234,7 +235,7 @@ def scalarTriple(a,b,c):
 def render(objects,lights):
 	width = xRes
 	height = yRes
-	image = Outs("Render",xRes,yRes,"BMP",True)
+	image = Outs("rendered_frames/frame",xRes,yRes,"BMP",True)
 
 	invWidth = 1.0 / width
 	invHeight = 1.0 / height
@@ -242,14 +243,26 @@ def render(objects,lights):
 	aspectratio = width / float(height)
 	angle = math.tan(math.pi * 0.5 * fov / 180.0);
 	# Trace Rays
-	for y in range(height):
-		for x in range(width):
-			print_status(x,y,width,height)
-			xx = (2 * ((x + 0.5) * invWidth) - 1) * angle * aspectratio
-			yy = (1 - 2 * ((y + 0.5) * invHeight)) * angle
-			ray = Ray(Point(0,0,0),Point(xx, yy, -1))
-			image.drawPixelColor(x,y,trace(ray, spheres, lights, 0))
-	image.save()
+	frames = os.listdir('./frames')
+	frames.sort()
+	for frame in frames:
+		spheres = []
+		galaxy = csv.reader(open(f'frames/{frame}'))
+		for star in galaxy:
+			x = float(star[2])/10
+			y = float(star[3])/10
+			z = float(star[4])/10-50
+			size = float(star[1])
+			spheres.append(Sphere(Point(x,y,z),size/1000,get_star_color(size),0,0))
+		
+		for y in range(height):
+			for x in range(width):
+				print_status(x,y,width,height)
+				xx = (2 * ((x + 0.5) * invWidth) - 1) * angle * aspectratio
+				yy = (1 - 2 * ((y + 0.5) * invHeight)) * angle
+				ray = Ray(Point(0,0,0),Point(xx, yy, -1))
+				image.drawPixelColor(x,y,trace(ray, spheres, lights, 0))
+		image.save()
 
 def print_status(x,y,width,height):
 	total = width*height
@@ -285,6 +298,11 @@ def trace(ray,objects,lights,depth):
 			
 			# The percentage from the surface of the sphere to the center of it
 			distance_percent = 1 - distance_from_center / collidee.radius
+			
+			# To make things a little more elegant, use a exponential progression
+			wieght = distance_percent**2 #not sure if I like this yet.
+			
+			# Stack this color with the others.
 			color = color.stack(collidee.color * distance_percent)
 		return color
 	else:
@@ -316,11 +334,11 @@ scale = 1000
 spheres = []
 galaxy = csv.reader(open('frames/frame00000.csv'))
 for star in galaxy:
-    x = float(star[2])/10
-    y = float(star[3])/10
-    z = float(star[4])/10-50
-    size = float(star[1])
-    spheres.append(Sphere(Point(x,y,z),size/1000,get_star_color(size),0,0))
+	x = float(star[2])/10
+	y = float(star[3])/10
+	z = float(star[4])/10-50
+	size = float(star[1])
+	spheres.append(Sphere(Point(x,y,z),size/1000,get_star_color(size),0,0))
 
 
 light = Light(Point( 0.0, 20, -30), Color(0.00, 0.00, 0.00));
