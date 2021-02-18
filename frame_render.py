@@ -7,10 +7,10 @@ import sys
 from PIL import Image, ImageDraw
 import csv
 
-#xRes = 640
-#yRes = 480
-xRes = 320
-yRes = 240
+xRes = 640
+yRes = 480
+#xRes = 320
+#yRes = 240
 MAX_RAY_DEPTH = 3
 
 gcams = []
@@ -246,11 +246,11 @@ def trace(ray,objects,lights,depth):
 	if not collidee:
 		return bg_color #no collisions, return backgrond
 	else:
-		collision_normal = collision_point - obj.position
+		collision_normal = collision_point - collidee.position
 		collision_normal.normalize()
 		
 		# Vector from Ray origin to Sphere Center
-		ray_to_sphere = obj.position - ray.o
+		ray_to_sphere = collidee.position - ray.o
 		
 		# Distance from ray origin to sphere center
 		distance = math.sqrt(ray_to_sphere.dot(ray_to_sphere))
@@ -262,7 +262,7 @@ def trace(ray,objects,lights,depth):
 		distance_from_center = math.sqrt(distance**2 - ray_projection**2)
 		
 		# The percentage from the surface of the sphere to the center of it
-		distance_percent = distance_from_center / obj.radius
+		distance_percent = 1 - distance_from_center / collidee.radius
 		return collidee.color * distance_percent
 
 def mix(a,b,mix):
