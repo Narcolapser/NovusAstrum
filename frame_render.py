@@ -162,9 +162,6 @@ class Sphere:
 		q = ray.o + ray.d * t
 		return (t,q)
 
-#	def __contains__(self,val):
-#		return self.RayCollides(val)
-
 class LineSegment:
 	def __init__(self,A,B):
 		self.A = A
@@ -195,17 +192,35 @@ class Color(Vector):
 	
 	def __repr__(self):
 		return "{},{},{}".format(self.x,self.y,self.z)
+		
+	def __add__(self, other_color):
+		x = self.x + other_color.x
+		if x > 1: x = 1
+		y = self.y + other_color.y
+		if y > 1: y = 1
+		z = self.z + other_color.z
+		if z > 1: z = 1
+		w = self.w + other_color.w
+		if w > 1: w = 1
+		return Color(x,y,z,w)
 	
 	def copy(self):
 		return Color(self.x,self.y,self.z,self.w)
 	
-	def __add__(self,other_color):
+	def stack(self,other_color):
 		# This attempts to add two colors together, getting a brighter resulting color value that
 		# is still less than 1.
 		x = math.sqrt(self.x**2 + other_color.x**2)
 		y = math.sqrt(self.y**2 + other_color.y**2)
 		z = math.sqrt(self.z**2 + other_color.z**2)
 		w = math.sqrt(self.w**2 + other_color.w**2)
+		return Color(x,y,z,w)
+	
+	def average(self,other_color):
+		x = (self.x+other_color.x)/2
+		y = (self.y+other_color.y)/2
+		z = (self.z+other_color.z)/2
+		w = (self.w+other_color.w)/2
 		return Color(x,y,z,w)
 
 class Light:
@@ -249,11 +264,6 @@ def trace(ray,objects,lights,depth):
 		result = obj.RayCollides(ray)
 		if result != 0:
 			collisions.append((obj, result[1], result[0]))
-#			distance = result[0]
-#			if distance < min_distance:
-#				collidee = obj
-#				collision_point = result[1]
-#				min_distance = distance
 
 	if len(collisions):
 		color = bg_color.copy()
@@ -275,7 +285,7 @@ def trace(ray,objects,lights,depth):
 			
 			# The percentage from the surface of the sphere to the center of it
 			distance_percent = 1 - distance_from_center / collidee.radius
-			color = color + collidee.color * distance_percent
+			color = color.stack(collidee.color * distance_percent)
 		return color
 	else:
 		return bg_color #no collisions, return backgrond
@@ -294,29 +304,23 @@ def get_star_color(size):
 	
 	# Small and smuldery
 	small = Color(0.5,0,0)
-	return big
+	
+	color = big * scaled
+	color = color + (small*(1-scaled))
+	return color
 
 #bg_color = Color(1,1,1)
 bg_color = Color(0,0,0)
 scale = 1000
 
 spheres = []
-#position, radius, surface color, reflectivity, transparency,
-#spheres.append(Sphere(Point(0.0,-10004,-20),10000,Color(0.2,0.2,0.2),0,0))
-#spheres.append(Sphere(Point(0.0,0,-10),0.4,Color(1.0,0.32,0.36),1,0.5))
-#spheres.append(Sphere(Point(5.0,-1,-15),0.2,Color(0.9,0.76,0.46), 1, 0.0))
-#spheres.append(Sphere(Point(5.0, 0, -25), 0.3, Color(0.65, 0.77, 0.97), 1, 0.0))
-#spheres.append(Sphere(Point(-5.5,0,-15), 0.3, Color(0.9,0.9,0.9),1,0))
-#spheres.append(Sphere(Point(0,0,-15), 0.3, Color(0.9,0.0,0.9),1,0))
-
-
 galaxy = csv.reader(open('frames/frame00000.csv'))
 for star in galaxy:
     x = float(star[2])/10
     y = float(star[3])/10
     z = float(star[4])/10-50
-    size = float(star[1])/1000
-    spheres.append(Sphere(Point(x,y,z),size,get_star_color(size),0,0))
+    size = float(star[1])
+    spheres.append(Sphere(Point(x,y,z),size/1000,get_star_color(size),0,0))
 
 
 light = Light(Point( 0.0, 20, -30), Color(0.00, 0.00, 0.00));
